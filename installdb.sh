@@ -92,8 +92,6 @@ else
     HOST_DB=${HOST_DB:-localhost}
     read -p "Ingrese el puerto de la base de datos (por defecto: 5432): " PORT_DB
     PORT_DB=${PORT_DB:-5432}
-    read -p "Ingrese el ENTITY_HASH: " ENTITY_HASH
-    read -p "Ingrese el INSTALL_TOKEN: " INSTALL_TOKEN
 fi
 
 # Generar el nombre de la base de datos si no se proporcionó
