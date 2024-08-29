@@ -20,13 +20,15 @@ generate_install_password() {
 generate_install_hash() {
     echo $(node -e "console.log(require('crypto').randomBytes(16).toString('hex'))")
 }
-
 # Función para actualizar o añadir una variable en el archivo .env
 update_or_add_env_var() {
     local var_name=$1
     local var_value=$2
     if grep -q "^${var_name}=" .env; then
-        sed -i "s/^${var_name}=.*/${var_name}=${var_value}/" .env
+        current_value=$(grep "^${var_name}=" .env | cut -d '=' -f2-)
+        if [ -z "$current_value" ]; then
+            sed -i "s/^${var_name}=.*/${var_name}=${var_value}/" .env
+        fi
     else
         echo "${var_name}=${var_value}" >> .env
     fi
