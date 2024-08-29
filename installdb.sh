@@ -26,13 +26,14 @@ update_or_add_env_var() {
     local var_value=$2
     if grep -q "^${var_name}=" .env; then
         current_value=$(grep "^${var_name}=" .env | cut -d '=' -f2-)
-        if [ -z "$current_value" ]; then
+        if [ -z "$current_value" ] || [[ "$var_name" != "ENTITY_HASH" && "$var_name" != "INSTALL_TOKEN" && "$var_name" != "INSTALL_HASH" ]]; then
             sed -i "s/^${var_name}=.*/${var_name}=${var_value}/" .env
         fi
     else
         echo "${var_name}=${var_value}" >> .env
     fi
 }
+
 
 # Verificar si node está instalado
 if ! command -v node &> /dev/null; then
