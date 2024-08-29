@@ -1,14 +1,287 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
 
 generator client {
   provider = "prisma-client-js"
 }
 
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+model Profile {
+  id                           Int                               @id @default(autoincrement())
+  firstName                    String?
+  middleName                   String?
+  lastName                     String?
+  secondLastName               String?
+  birthDate                    DateTime?
+  gender                       String?
+  employmentStatus             EmploymentStatusRelation[]
+  educationStatus              EducationalStatusRelation[]
+  contacts                     ProfileContact[]
+  familyRelations              FamilyRelationProfile[]           @relation("ProfileToFamilyRelation")
+  anotherFamilyRelations       FamilyRelationProfile[]           @relation("AnotherProfileToFamilyRelation")
+  affinities                   AffinityRelationProfile[]         @relation("ProfileToAffinityRelation")
+  anotherAffinities            AffinityRelationProfile[]         @relation("AnotherProfileToAffinityRelation")
+  geographicInfo               GeographicProfile?
+  user                         Users?
+  structures                   Structures[]
+  structureMembers             StructureMembers[]
+  memberTypes                  MemberTypeRelationProfile[]
+  medicalConditions            MedicalConditionRelationProfile[]
+  observations                 ObservationHistoryProfile[]
+  baptisms                     BaptismRelationProfile[]
+  petitions                    PetitionHistoryProfile[]
+  attentionHistory             AttentionHistory[]                @relation("ProfileToAttentionHistory")
+  intermediaryAttentionHistory AttentionHistory[]                @relation("IntermediaryProfileToAttentionHistory")
+}
+
+model DirectionType {
+  id                 Int                  @id @default(autoincrement())
+  direccion          String?
+  FamilyRelationType FamilyRelationType[]
+  AffinityType       AffinityType[]
+}
+
+model EmploymentStatusType {
+  id        Int                        @id @default(autoincrement())
+  status    String?
+  relations EmploymentStatusRelation[]
+}
+
+model EmploymentStatusRelation {
+  id                     Int                  @id @default(autoincrement())
+  profileId              Int
+  employmentStatusTypeId Int
+  companyName            String?
+  position               String?
+  profile                Profile              @relation(fields: [profileId], references: [id])
+  employmentStatusType   EmploymentStatusType @relation(fields: [employmentStatusTypeId], references: [id])
+}
+
+model EducationalStatusType {
+  id        Int                         @id @default(autoincrement())
+  status    String?
+  relations EducationalStatusRelation[]
+}
+
+model AcademyNames {
+  id        Int                         @id @default(autoincrement())
+  name      String?
+  relations EducationalStatusRelation[]
+}
+
+model EducationalStatusRelation {
+  id                      Int                   @id @default(autoincrement())
+  profileId               Int
+  educationalStatusTypeId Int
+  academyId               Int
+  career                  String?
+  profile                 Profile               @relation(fields: [profileId], references: [id])
+  educationalStatusType   EducationalStatusType @relation(fields: [educationalStatusTypeId], references: [id])
+  academy                 AcademyNames          @relation(fields: [academyId], references: [id])
+}
+
+model ProfileContactType {
+  id       Int              @id @default(autoincrement())
+  type     String?
+  contacts ProfileContact[]
+}
+
+model ProfileContact {
+  id          Int                @id @default(autoincrement())
+  profileId   Int
+  typeId      Int
+  description String?
+  profile     Profile            @relation(fields: [profileId], references: [id])
+  type        ProfileContactType @relation(fields: [typeId], references: [id])
+}
+
+model FamilyRelationType {
+  id            Int                     @id @default(autoincrement())
+  type          String?
+  dirId         Int
+  directiontype DirectionType           @relation(fields: [dirId], references: [id])
+  relations     FamilyRelationProfile[]
+}
+
+model FamilyRelationProfile {
+  id               Int                @id @default(autoincrement())
+  profileId        Int
+  anotherProfileId Int
+  typeId           Int
+  profile          Profile            @relation(fields: [profileId], references: [id], name: "ProfileToFamilyRelation", map: "ProfileToFamilyRelation_fkey")
+  anotherProfile   Profile            @relation(fields: [anotherProfileId], references: [id], name: "AnotherProfileToFamilyRelation", map: "AnotherProfileToFamilyRelation_fkey")
+  type             FamilyRelationType @relation(fields: [typeId], references: [id])
+}
+
+model AffinityType {
+  id            Int                       @id @default(autoincrement())
+  type          String?
+  dirId         Int
+  directiontype DirectionType             @relation(fields: [dirId], references: [id])
+  relations     AffinityRelationProfile[]
+}
+
+model AffinityRelationProfile {
+  id               Int          @id @default(autoincrement())
+  profileId        Int
+  anotherProfileId Int
+  affinityId       Int
+  profile          Profile      @relation(fields: [profileId], references: [id], name: "ProfileToAffinityRelation", map: "ProfileToAffinityRelation_profileId_fkey")
+  anotherProfile   Profile      @relation(fields: [anotherProfileId], references: [id], name: "AnotherProfileToAffinityRelation", map: "AnotherProfileToAffinityRelation_anotherProfileId_fkey")
+  affinity         AffinityType @relation(fields: [affinityId], references: [id], map: "AffinityRelationProfile_affinityId_fkey")
+}
+
+model GeographicProfile {
+  id          Int     @id @default(autoincrement())
+  lat         Float?
+  long        Float?
+  queryMap    String?
+  city        String?
+  state       String?
+  country     String?
+  description String?
+  houseNumber String?
+  profileId   Int     @unique
+  profile     Profile @relation(fields: [profileId], references: [id])
+}
+
+model Users {
+  id        Int     @id @default(autoincrement())
+  username  String?
+  password  String?
+  profileId Int     @unique
+  profile   Profile @relation(fields: [profileId], references: [id])
+}
+
+model StructureType {
+  id         Int          @id @default(autoincrement())
+  type       String?
+  structures Structures[]
+}
+
+model Structures {
+  id            Int                @id @default(autoincrement())
+  typeId        Int
+  name          String?
+  mainProfileId Int
+  type          StructureType      @relation(fields: [typeId], references: [id])
+  mainProfile   Profile            @relation(fields: [mainProfileId], references: [id])
+  members       StructureMembers[]
+}
+
+model StructureMembers {
+  id          Int        @id @default(autoincrement())
+  profileId   Int
+  structureId Int
+  profile     Profile    @relation(fields: [profileId], references: [id])
+  structure   Structures @relation(fields: [structureId], references: [id])
+}
+
+model MemberType {
+  id        Int                         @id @default(autoincrement())
+  type      String?
+  relations MemberTypeRelationProfile[]
+}
+
+model MemberTypeRelationProfile {
+  id           Int        @id @default(autoincrement())
+  profileId    Int
+  memberTypeId Int
+  profile      Profile    @relation(fields: [profileId], references: [id])
+  memberType   MemberType @relation(fields: [memberTypeId], references: [id])
+}
+
+model MedicalConditionType {
+  id        Int                               @id @default(autoincrement())
+  type      String?
+  relations MedicalConditionRelationProfile[]
+}
+
+model MedicalConditionRelationProfile {
+  id          Int                  @id @default(autoincrement())
+  typeId      Int
+  profileId   Int
+  description String?
+  type        MedicalConditionType @relation(fields: [typeId], references: [id])
+  profile     Profile              @relation(fields: [profileId], references: [id])
+}
+
+model ObservationTypes {
+  id           Int                         @id @default(autoincrement())
+  type         String?
+  observations ObservationHistoryProfile[]
+}
+
+model ObservationHistoryProfile {
+  id                Int              @id @default(autoincrement())
+  profileId         Int
+  observationTypeId Int
+  observation       String?
+  profile           Profile          @relation(fields: [profileId], references: [id])
+  observationType   ObservationTypes @relation(fields: [observationTypeId], references: [id])
+}
+
+model BaptismRelationProfile {
+  id        Int       @id @default(autoincrement())
+  profileId Int
+  date      DateTime?
+  local     Boolean?
+  profile   Profile   @relation(fields: [profileId], references: [id])
+}
+
+model PetitionType {
+  id        Int                      @id @default(autoincrement())
+  type      String?
+  petitions PetitionHistoryProfile[]
+}
+
+model PetitionCategories {
+  id        Int                      @id @default(autoincrement())
+  category  String?
+  petitions PetitionHistoryProfile[]
+}
+
+model PetitionHistoryProfile {
+  id                 Int                @id @default(autoincrement())
+  profileId          Int
+  petitionTypeId     Int
+  petitionCategoryId Int
+  description        String?
+  petitionDate       DateTime?
+  completionDate     DateTime?
+  profile            Profile            @relation(fields: [profileId], references: [id])
+  petitionType       PetitionType       @relation(fields: [petitionTypeId], references: [id])
+  petitionCategory   PetitionCategories @relation(fields: [petitionCategoryId], references: [id])
+}
+
+model AttentionType {
+  id         Int                @id @default(autoincrement())
+  type       String?
+  attentions AttentionHistory[]
+}
+
+model AttentionHistory {
+  id                    Int           @id @default(autoincrement())
+  description           String?
+  profileId             Int
+  attentionTypeId       Int
+  profile               Profile       @relation(fields: [profileId], references: [id], name: "ProfileToAttentionHistory", map: "ProfileToAttentionHistory_profileId_fkey")
+  attentionType         AttentionType @relation(fields: [attentionTypeId], references: [id])
+  intermediaryProfileId Int           @unique
+  intermediaryProfile   Profile       @relation(fields: [intermediaryProfileId], references: [id], name: "IntermediaryProfileToAttentionHistory", map: "IntermediaryProfileToAttentionHistory_fkey")
+}
+
+model IntelligenceMetaData {
+  id                Int       @id @default(autoincrement())
+  databaseName      String?
+  appUniqueId       String?
+  installationDate  DateTime?
+  congregationName  String?
+  contactNumber     String?
+  juridicalInfo     String?
+  syncUrl           String?
+  lastVersionUpdate String?
+  lastUpdateDate    DateTime?
+  installHash       String?
 }
